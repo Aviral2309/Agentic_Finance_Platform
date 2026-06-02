@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: wp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wealthpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wealthpilot_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-wealthpilot}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wealthpilot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: wp_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: wp_chroma
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8001:8000"
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wp_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wealthpilot}:${POSTGRES_PASSWORD:-wealthpilot_dev}@db:5432/${POSTGRES_DB:-wealthpilot}
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - upload_data:/app/uploads
+      - model_data:/app/models
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wp_celery
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wealthpilot}:${POSTGRES_PASSWORD:-wealthpilot_dev}@db:5432/${POSTGRES_DB:-wealthpilot}
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - upload_data:/app/uploads
+      - model_data:/app/models
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+
+volumes:
+  postgres_data:
+  chroma_data:
+  upload_data:
+  model_data:
