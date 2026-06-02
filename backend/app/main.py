@@ -26,6 +26,18 @@ async def lifespan(app: FastAPI):
     try:
         import chromadb
         client = chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
+
+        # Create default tenant and database if they don't exist
+        try:
+            client.get_tenant("default_tenant")
+        except Exception:
+            chromadb.api.client.SharedSystemClient.create_tenant("default_tenant")
+
+        try:
+            client.get_database("default_database", tenant="default_tenant")
+        except Exception:
+            pass
+
         client.get_or_create_collection("financial_knowledge")
         client.get_or_create_collection("conversation_memory")
         logger.info("ChromaDB collections initialized")

@@ -6,15 +6,16 @@ python-multipart==0.0.9
 # Database
 sqlalchemy==2.0.30
 alembic==1.13.1
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.9
 
 # Auth
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
 
 # Validation
-pydantic==2.7.1
-pydantic-settings==2.2.1
+pydantic>=2.7.4
+pydantic-settings>=2.2.1
 email-validator==2.1.1
 
 # Task queue
@@ -43,11 +44,12 @@ sentencepiece==0.2.0
 yfinance==0.2.38
 newsapi-python==0.2.7
 
-# GenAI + Agents
-google-generativeai==0.5.4
-langchain==0.2.1
-langchain-google-genai==1.0.3
-langgraph==0.1.1
+# GenAI + Agents — all pinned to compatible set
+google-generativeai>=0.7.0
+langchain==0.3.25
+langchain-google-genai>=2.0.0
+langgraph>=0.2.60
+langchain-core>=0.3.50
 
 # Vector DB
 chromadb==0.5.0
