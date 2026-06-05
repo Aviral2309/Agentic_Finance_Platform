@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import ExpensesPage from './pages/ExpensesPage'
 import PortfolioPage from './pages/PortfolioPage'
+import InsightsPage from './pages/InsightsPage'
 import AdvisorPage from './pages/AdvisorPage'
 
 function ProtectedRoute({ children }) {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="portfolio" element={<PortfolioPage />} />
           <Route path="advisor" element={<AdvisorPage />} />
+          <Route path="insights" element={<InsightsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

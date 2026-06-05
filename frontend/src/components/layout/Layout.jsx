@@ -3,7 +3,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, CreditCard, TrendingUp,
   MessageSquare, LogOut, Menu, X,
-  Wallet, Bell, ChevronRight
+  Wallet, Bell, ChevronRight, BarChart2
 } from 'lucide-react'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/expenses',  icon: CreditCard,      label: 'Expenses'   },
   { to: '/portfolio', icon: TrendingUp,      label: 'Portfolio'  },
   { to: '/advisor',   icon: MessageSquare,   label: 'AI Advisor' },
+  { to: '/insights', icon: BarChart2, label: 'Insights' },
 ]
 
 export default function Layout() {

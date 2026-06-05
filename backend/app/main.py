@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup + shutdown logic."""
@@ -66,12 +67,13 @@ app.add_middleware(
 )
 
 # Routes
-from app.api.routes import auth, expenses, portfolio, advisor
+from app.api.routes import auth, expenses, portfolio, advisor, insights
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(expenses.router, prefix="/api")
 app.include_router(portfolio.router, prefix="/api")
 app.include_router(advisor.router, prefix="/api")
+app.include_router(insights.router, prefix="/api")
 
 
 @app.get("/ping")

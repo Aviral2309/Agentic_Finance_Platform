@@ -376,3 +376,44 @@ def confirm_hitl(
 
     db.commit()
     return {"message": "Confirmed", "category": payload.confirmed_category}
+
+from pydantic import BaseModel as PydanticBase
+
+class ManualTransactionCreate(PydanticBase):
+    date: datetime
+    amount: float
+    description: str
+    transaction_type: str = "debit"
+    category: Optional[str] = None
+
+@router.post("/transactions/manual", response_model=TransactionOut, status_code=201)
+def add_manual_transaction(
+    payload: ManualTransactionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.ml.categorizer import layer1_rule_based
+    category = payload.category
+    layer = 4
+    if not category:
+        cat = layer1_rule_based(payload.description)
+        if cat:
+            category = cat
+            layer = 1
+        else:
+            category = "Other"
+    tx = Transaction(
+        user_id=current_user.id,
+        date=payload.date,
+        amount=payload.amount,
+        description=payload.description,
+        transaction_type=TransactionType.DEBIT if payload.transaction_type == "debit" else TransactionType.CREDIT,
+        category=category,
+        categorization_layer=layer,
+        confidence=1.0 if layer == 1 else 0.5,
+        is_confirmed=True,
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    return tx
