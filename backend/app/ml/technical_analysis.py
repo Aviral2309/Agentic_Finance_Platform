@@ -181,18 +181,23 @@ def compute_support_resistance(prices: np.ndarray) -> dict:
         "week52_high": round(float(np.max(prices[-252:])) if len(prices) >= 252 else float(np.max(prices)), 2),
     }
 
-
 def analyse_ticker(ticker: str) -> dict:
     """
     Main function — computes all technical indicators for a ticker.
     Returns structured data + Gemini interpretation.
     """
     import yfinance as yf
+    import pandas as pd
 
     yf_ticker = f"{ticker}.NS" if not ticker.endswith((".NS", ".BO")) else ticker
 
     try:
-        data = yf.download(yf_ticker, period="1y", progress=False, auto_adjust=True)
+        data = yf.download(yf_ticker, period="1y", progress=False)
+
+        # Fix MultiIndex columns from newer yfinance versions
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+
         if data.empty or len(data) < 20:
             return {"error": f"Insufficient data for {ticker}"}
 
@@ -249,7 +254,6 @@ def analyse_ticker(ticker: str) -> dict:
             "data_points": len(prices),
         }
 
-        # Add Gemini interpretation
         result["interpretation"] = get_gemini_interpretation(ticker, result)
         return result
 

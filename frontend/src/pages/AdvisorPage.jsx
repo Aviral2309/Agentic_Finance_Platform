@@ -61,7 +61,7 @@ function Message({ msg }) {
         )}
         {msg.created_at && !isThinking && (
           <div style={{ fontSize: '0.65rem', color: isUser ? 'rgba(8,12,20,0.5)' : 'var(--text-muted)', marginTop: 6 }}>
-            {new Date(msg.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+            {msg.created_at ? new Date(msg.created_at + 'Z').toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }) : ''}
           </div>
         )}
       </div>

@@ -24,23 +24,33 @@ from app.ml.technical_analysis import analyse_ticker
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
-
 def _get_ticker_info(ticker: str) -> dict:
+    import yfinance as yf
+    import pandas as pd
+
     yf_ticker = f"{ticker}.NS" if not ticker.endswith((".NS", ".BO")) else ticker
     try:
+        # Get historical data for current price
+        hist = yf.download(yf_ticker, period="5d", progress=False)
+
+        # Fix MultiIndex columns
+        if isinstance(hist.columns, pd.MultiIndex):
+            hist.columns = hist.columns.get_level_values(0)
+
+        current_price = float(hist["Close"].iloc[-1]) if not hist.empty else None
+
+        # Get company info
         t = yf.Ticker(yf_ticker)
         info = t.info
-        hist = t.history(period="5d")
-        current_price = float(hist["Close"].iloc[-1]) if not hist.empty else None
+
         return {
             "current_price": current_price,
             "company_name": info.get("longName") or info.get("shortName"),
             "sector": info.get("sector"),
-            "pe_ratio": info.get("trailingPE"),
-            "market_cap": info.get("marketCap"),
         }
-    except Exception:
-        return {"current_price": None, "company_name": None, "sector": None, "pe_ratio": None, "market_cap": None}
+    except Exception as e:
+        logger.error(f"Ticker info failed for {ticker}: {e}")
+        return {"current_price": None, "company_name": None, "sector": None}
 
 
 def _compute_sharpe(ticker: str) -> Optional[float]:
