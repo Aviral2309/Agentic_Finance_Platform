@@ -25,9 +25,14 @@ class Settings(BaseSettings):
 
     MLFLOW_TRACKING_URI: str = "sqlite:///mlflow.db"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+    "env_file": ".env",
+    "case_sensitive": True,
+    "extra": "ignore"
+    }
+    POSTGRES_USER: str = "wealthpilot"
+    POSTGRES_PASSWORD: str = "wealthpilot_dev"
+    POSTGRES_DB: str = "wealthpilot"
 
 
 @lru_cache()

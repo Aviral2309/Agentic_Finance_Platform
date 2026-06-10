@@ -13,9 +13,22 @@ timeframes. Gemini interprets the indicators in natural language."
 import logging
 from typing import Optional
 import numpy as np
+from google import genai
 
 logger = logging.getLogger(__name__)
 
+import math
+
+def _clean(val):
+    """Replace nan/inf with None for JSON compliance."""
+    if val is None:
+        return None
+    try:
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return val
+    except (TypeError, ValueError):
+        return val
 
 def compute_rsi(prices: np.ndarray, period: int = 14) -> float:
     """RSI — momentum oscillator. >70 = overbought, <30 = oversold."""
@@ -113,7 +126,11 @@ def compute_moving_averages(prices: np.ndarray) -> dict:
         else:
             result[f"ma{period}"] = None
 
-    current = float(prices[-1])
+    prices_clean = prices[~np.isnan(prices)]
+    if len(prices_clean) == 0:
+        return {"error": f"No valid price data for {ticker}"}
+    current = float(prices_clean[-1])
+    prices = prices_clean
     result["current"] = round(current, 2)
 
     # Golden/Death cross
@@ -255,6 +272,16 @@ def analyse_ticker(ticker: str) -> dict:
         }
 
         result["interpretation"] = get_gemini_interpretation(ticker, result)
+        def _deep_clean(obj):
+            if isinstance(obj, dict):
+                return {k: _deep_clean(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [_deep_clean(v) for v in obj]
+            elif isinstance(obj, float):
+                return _clean(obj)
+            return obj
+
+            result = _deep_clean(result)
         return result
 
     except Exception as e:
@@ -263,16 +290,15 @@ def analyse_ticker(ticker: str) -> dict:
 
 
 def get_gemini_interpretation(ticker: str, analysis: dict) -> str:
-    """Feed technical indicators to Gemini for plain-English interpretation."""
     from app.core.config import settings
-    import google.generativeai as genai
-
+    
     if not settings.GEMINI_API_KEY:
         return _rule_based_interpretation(analysis)
 
     try:
+        import google.generativeai as genai
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
         sr = analysis.get("support_resistance", {})
         ma = analysis.get("moving_averages", {})
@@ -282,26 +308,24 @@ def get_gemini_interpretation(ticker: str, analysis: dict) -> str:
         prompt = f"""Analyse this stock for an Indian retail investor. Be specific and direct.
 
 Stock: {ticker}
-Current Price: ₹{analysis['current_price']}
+Current Price: ₹{analysis.get('current_price', 'N/A')}
 52W Range: ₹{sr.get('week52_low', 'N/A')} — ₹{sr.get('week52_high', 'N/A')}
-Current vs 52W High: {round((analysis['current_price'] - sr.get('week52_high', analysis['current_price'])) / max(sr.get('week52_high', 1), 1) * 100, 1)}%
 
 Technical Indicators:
-- RSI (14): {analysis['rsi']} {'(oversold — potential bounce)' if analysis['rsi'] < 35 else '(overbought — caution)' if analysis['rsi'] > 70 else '(neutral range)'}
-- MACD: {analysis['macd']['crossover']} (histogram: {analysis['macd']['histogram']})
-- Trend (MA): {ma.get('trend', 'N/A')} | 50MA: ₹{ma.get('ma50', 'N/A')} | 200MA: ₹{ma.get('ma200', 'N/A')}
-- Bollinger: Price is {bb.get('position', 'N/A')} (bandwidth: {bb.get('bandwidth', 0)}%)
-- Volume: {vol.get('signal', 'neutral')} (current {vol.get('volume_ratio', 1):.1f}x avg)
+- RSI (14): {analysis.get('rsi', 'N/A')} {'(oversold)' if (analysis.get('rsi') or 50) < 35 else '(overbought)' if (analysis.get('rsi') or 50) > 70 else '(neutral)'}
+- MACD: {analysis.get('macd', {}).get('crossover', 'N/A')}
+- Trend: {ma.get('trend', 'N/A')} | 50MA: ₹{ma.get('ma50', 'N/A')} | 200MA: ₹{ma.get('ma200', 'N/A')}
+- Bollinger: {bb.get('position', 'N/A')}
+- Volume: {vol.get('signal', 'N/A')}
 - Support: ₹{sr.get('support', 'N/A')} | Resistance: ₹{sr.get('resistance', 'N/A')}
+- Overall signal: {analysis.get('overall_signal', 'N/A').upper()}
 
-Overall signal: {analysis['overall_signal'].upper()} ({analysis['bullish_signals']} bullish, {analysis['bearish_signals']} bearish signals)
+Give exactly 3 bullet points:
+- Current technical position
+- Key risk or opportunity  
+- What to watch next
 
-Give a 3-point analysis:
-1. Current technical position (1 sentence)
-2. Key risk or opportunity to watch (1 sentence)
-3. What to monitor next (1 sentence)
-
-Be specific with ₹ levels. No generic advice. Max 80 words."""
+Be specific with ₹ levels. Max 60 words total."""
 
         response = model.generate_content(prompt)
         return response.text.strip()

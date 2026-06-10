@@ -42,6 +42,8 @@ def router_agent(state: AdvisorState) -> AdvisorState:
     intent = "both"  # safe default
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
+        if not settings.GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY not set in .env")
         model = genai.GenerativeModel("gemini-2.5-flash")
         prompt = f"""Classify this financial query. Reply with ONE word only.
 

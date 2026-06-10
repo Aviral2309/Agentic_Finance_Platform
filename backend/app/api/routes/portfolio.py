@@ -27,17 +27,23 @@ router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 def _get_ticker_info(ticker: str) -> dict:
     import yfinance as yf
     import pandas as pd
+    import numpy as np
 
     yf_ticker = f"{ticker}.NS" if not ticker.endswith((".NS", ".BO")) else ticker
     try:
-        # Get historical data for current price
+        # Download 5 days to ensure we get at least one valid closing price
         hist = yf.download(yf_ticker, period="5d", progress=False)
 
-        # Fix MultiIndex columns
+        # Fix MultiIndex columns from newer yfinance
         if isinstance(hist.columns, pd.MultiIndex):
             hist.columns = hist.columns.get_level_values(0)
 
-        current_price = float(hist["Close"].iloc[-1]) if not hist.empty else None
+        # Get last VALID price — dropna handles NaN from market being closed
+        current_price = None
+        if not hist.empty:
+            close_series = hist["Close"].dropna()
+            if not close_series.empty:
+                current_price = float(close_series.iloc[-1])
 
         # Get company info
         t = yf.Ticker(yf_ticker)
@@ -49,7 +55,6 @@ def _get_ticker_info(ticker: str) -> dict:
             "sector": info.get("sector"),
         }
     except Exception as e:
-        logger.error(f"Ticker info failed for {ticker}: {e}")
         return {"current_price": None, "company_name": None, "sector": None}
 
 
@@ -413,6 +418,10 @@ Give a specific, actionable 3-point analysis. Be direct. Use Indian market conte
         except Exception as e2:
             raise HTTPException(status_code=500, detail=str(e2))
 
+from fastapi.responses import JSONResponse
+import math
+import json
+
 @router.get("/analysis/{ticker}")
 def get_technical_analysis(
     ticker: str,
@@ -423,7 +432,20 @@ def get_technical_analysis(
     result = analyse_ticker(ticker)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
-    return result
+    
+    # Sanitize nan/inf values before JSON serialization
+    def clean(obj):
+        if isinstance(obj, dict):
+            return {k: clean(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [clean(v) for v in obj]
+        elif isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
+        return obj
+    
+    return JSONResponse(content=clean(result))
 
 def _train_lstm_background(ticker: str, db: Session):
     from app.ml.lstm_forecaster import train

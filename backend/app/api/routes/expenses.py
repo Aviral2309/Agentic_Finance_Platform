@@ -4,8 +4,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
+from collections import defaultdict
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Query
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Query, BackgroundTasks
 from sqlalchemy import func, extract
 from sqlalchemy.orm import Session
 
@@ -21,38 +22,71 @@ from app.schemas.schemas import (
     HITLConfirm, HITLItem, JobStatusOut,
     MonthlyTrend, ExpenseSummary, TransactionOut, TransactionUpdate,
 )
-from app.services.parse_service import process_upload_task
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
-ALLOWED_TYPES = {"application/pdf", "text/csv", "application/vnd.ms-excel"}
 ALLOWED_EXTENSIONS = {".pdf", ".csv"}
 
 
-# ── Upload ─────────────────────────────────────────────────────
+# ── Direct parse (bypasses Celery — works on Windows) ──────────
+
+def _run_parse_direct(job_id: str):
+    """
+    Runs file parsing directly in a FastAPI background thread.
+    Used instead of Celery because Celery runs in Docker and
+    cannot access files saved on the Windows host filesystem.
+    """
+    from app.core.database import SessionLocal
+    from app.services.parse_service import _process_pdf, _process_csv
+
+    db = SessionLocal()
+    try:
+        job = db.query(ParseJob).filter(ParseJob.id == UUID(job_id)).first()
+        if not job:
+            return
+        job.status = JobStatus.PROCESSING
+        db.commit()
+
+        if job.file_type == "pdf":
+            _process_pdf(db, job)
+        elif job.file_type == "csv":
+            _process_csv(db, job)
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Direct parse failed: {e}", exc_info=True)
+        db2 = SessionLocal()
+        try:
+            j = db2.query(ParseJob).filter(ParseJob.id == UUID(job_id)).first()
+            if j:
+                j.status = JobStatus.FAILED
+                j.error_message = str(e)
+                j.completed_at = datetime.utcnow()
+                db2.commit()
+        finally:
+            db2.close()
+    finally:
+        db.close()
+
+
+# ── Upload ──────────────────────────────────────────────────────
 
 @router.post("/upload", status_code=202)
 async def upload_statement(
     file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Upload bank statement PDF or CSV.
-    Returns job_id immediately — processing happens async in Celery worker.
-    Client polls GET /expenses/jobs/{job_id} for progress.
-    """
     ext = Path(file.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"File type {ext} not supported. Use PDF or CSV.")
 
-    # Check file size
     content = await file.read()
     size_mb = len(content) / (1024 * 1024)
     if size_mb > settings.MAX_UPLOAD_SIZE_MB:
         raise HTTPException(status_code=400, detail=f"File too large. Max {settings.MAX_UPLOAD_SIZE_MB}MB.")
 
-    # Save file
     upload_dir = Path(settings.UPLOAD_DIR) / str(current_user.id)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -63,7 +97,6 @@ async def upload_statement(
     with open(file_path, "wb") as f:
         f.write(content)
 
-    # Create job record
     job = ParseJob(
         id=job_id,
         user_id=current_user.id,
@@ -75,8 +108,9 @@ async def upload_statement(
     db.add(job)
     db.commit()
 
-    # Enqueue Celery task
-    process_upload_task.delay(str(job_id))
+    # Use FastAPI background task instead of Celery
+    # Celery worker runs in Docker and cannot access Windows host files
+    background_tasks.add_task(_run_parse_direct, str(job_id))
 
     return {
         "job_id": str(job_id),
@@ -115,18 +149,73 @@ def get_job_status(
     )
 
 
-# ── Transactions ───────────────────────────────────────────────
+# ── Statements library ──────────────────────────────────────────
+
+@router.get("/statements")
+def get_statements(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    jobs = (
+        db.query(ParseJob)
+        .filter(
+            ParseJob.user_id == current_user.id,
+            ParseJob.status.in_([JobStatus.DONE, JobStatus.PARTIAL]),
+            ParseJob.transactions_found > 0,
+        )
+        .order_by(ParseJob.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "job_id": str(j.id),
+            "filename": j.filename,
+            "file_type": j.file_type,
+            "transactions_found": j.transactions_found,
+            "status": j.status.value,
+            "created_at": j.created_at.isoformat(),
+        }
+        for j in jobs
+    ]
+
+
+@router.delete("/statements/{job_id}", status_code=204)
+def delete_statement(
+    job_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.models.models import FailedChunk
+    job = db.query(ParseJob).filter(
+        ParseJob.id == job_id,
+        ParseJob.user_id == current_user.id,
+    ).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Statement not found")
+
+    txn_ids = [t.id for t in db.query(Transaction.id).filter(Transaction.job_id == job_id).all()]
+    for txn_id in txn_ids:
+        db.query(HITLQueue).filter(HITLQueue.transaction_id == txn_id).delete()
+
+    db.query(Transaction).filter(Transaction.job_id == job_id).delete()
+    db.query(FailedChunk).filter(FailedChunk.job_id == job_id).delete()
+    db.delete(job)
+    db.commit()
+
+
+# ── Transactions ────────────────────────────────────────────────
 
 @router.get("/transactions", response_model=List[TransactionOut])
 def get_transactions(
     month: Optional[str] = Query(None, description="YYYY-MM format"),
     category: Optional[str] = None,
-    limit: int = Query(50, le=200),
+    limit: int = Query(100, le=500),
     offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    q = db.query(Transaction).filter(Transaction.user_id == current_user.id)
+    uid = UUID(str(current_user.id))
+    q = db.query(Transaction).filter(Transaction.user_id == uid)
 
     if month:
         try:
@@ -141,8 +230,51 @@ def get_transactions(
     if category:
         q = q.filter(Transaction.category == category)
 
-    transactions = q.order_by(Transaction.date.desc()).offset(offset).limit(limit).all()
-    return transactions
+    return q.order_by(Transaction.date.desc()).offset(offset).limit(limit).all()
+
+
+@router.post("/transactions/manual", response_model=TransactionOut, status_code=201)
+def add_manual_transaction(
+    payload: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.ml.categorizer import layer1_rule_based
+    from pydantic import BaseModel
+
+    description = payload.get("description", "")
+    amount = float(payload.get("amount", 0))
+    transaction_type = payload.get("transaction_type", "debit")
+    category = payload.get("category", "")
+    date_str = payload.get("date", datetime.utcnow().isoformat())
+
+    try:
+        date = datetime.fromisoformat(date_str.replace("Z", "+00:00").replace("+00:00", ""))
+    except Exception:
+        date = datetime.utcnow()
+
+    if not category:
+        cat = layer1_rule_based(description)
+        category = cat or "Other"
+        layer = 1 if cat else 4
+    else:
+        layer = 4
+
+    tx = Transaction(
+        user_id=UUID(str(current_user.id)),
+        date=date,
+        amount=amount,
+        description=description,
+        transaction_type=TransactionType.DEBIT if transaction_type == "debit" else TransactionType.CREDIT,
+        category=category,
+        categorization_layer=layer,
+        confidence=1.0 if layer == 1 else 0.5,
+        is_confirmed=True,
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    return tx
 
 
 @router.patch("/transactions/{tx_id}", response_model=TransactionOut)
@@ -154,7 +286,7 @@ def update_transaction_category(
 ):
     tx = db.query(Transaction).filter(
         Transaction.id == tx_id,
-        Transaction.user_id == current_user.id,
+        Transaction.user_id == UUID(str(current_user.id)),
     ).first()
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -162,42 +294,52 @@ def update_transaction_category(
     tx.category = payload.category
     tx.sub_category = payload.sub_category
     tx.is_confirmed = True
-    tx.categorization_layer = 4  # manually corrected
+    tx.categorization_layer = 4
     db.commit()
     db.refresh(tx)
     return tx
 
 
-# ── Summary + Trends ───────────────────────────────────────────
+# ── Summary + Trends ────────────────────────────────────────────
 
 @router.get("/summary")
 def get_expense_summary(
-    month: Optional[str] = Query(None, description="YYYY-MM, defaults to current month"),
+    month: Optional[str] = Query(None, description="YYYY-MM for specific month, omit for all time"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Category breakdown + total for a given month."""
+    uid = UUID(str(current_user.id))
+
     if month:
         try:
             year, mon = int(month.split("-")[0]), int(month.split("-")[1])
         except Exception:
             raise HTTPException(status_code=400, detail="month must be YYYY-MM format")
-    else:
-        now = datetime.utcnow()
-        year, mon = now.year, now.month
-
-    rows = (
-        db.query(Transaction.category, func.sum(Transaction.amount).label("total"), func.count().label("count"))
-        .filter(
-            Transaction.user_id == current_user.id,
-            Transaction.transaction_type == TransactionType.DEBIT,
-            extract("year", Transaction.date) == year,
-            extract("month", Transaction.date) == mon,
+        rows = (
+            db.query(Transaction.category, func.sum(Transaction.amount).label("total"), func.count().label("count"))
+            .filter(
+                Transaction.user_id == uid,
+                Transaction.transaction_type == TransactionType.DEBIT,
+                extract("year", Transaction.date) == year,
+                extract("month", Transaction.date) == mon,
+            )
+            .group_by(Transaction.category)
+            .order_by(func.sum(Transaction.amount).desc())
+            .all()
         )
-        .group_by(Transaction.category)
-        .order_by(func.sum(Transaction.amount).desc())
-        .all()
-    )
+        month_label = f"{year}-{mon:02d}"
+    else:
+        rows = (
+            db.query(Transaction.category, func.sum(Transaction.amount).label("total"), func.count().label("count"))
+            .filter(
+                Transaction.user_id == uid,
+                Transaction.transaction_type == TransactionType.DEBIT,
+            )
+            .group_by(Transaction.category)
+            .order_by(func.sum(Transaction.amount).desc())
+            .all()
+        )
+        month_label = "all"
 
     grand_total = sum(r.total for r in rows)
     summary = [
@@ -209,7 +351,7 @@ def get_expense_summary(
         )
         for r in rows
     ]
-    return {"month": f"{year}-{mon:02d}", "total": round(grand_total, 2), "categories": summary}
+    return {"month": month_label, "total": round(grand_total, 2), "categories": summary}
 
 
 @router.get("/trends")
@@ -218,7 +360,7 @@ def get_monthly_trends(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Last N months of spending trends."""
+    uid = UUID(str(current_user.id))
     rows = (
         db.query(
             extract("year", Transaction.date).label("year"),
@@ -226,14 +368,12 @@ def get_monthly_trends(
             Transaction.transaction_type,
             func.sum(Transaction.amount).label("total"),
         )
-        .filter(Transaction.user_id == current_user.id)
+        .filter(Transaction.user_id == uid)
         .group_by("year", "month", Transaction.transaction_type)
         .order_by("year", "month")
         .all()
     )
 
-    # Aggregate by month
-    from collections import defaultdict
     monthly = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
     for r in rows:
         key = f"{int(r.year)}-{int(r.month):02d}"
@@ -254,7 +394,7 @@ def get_monthly_trends(
     ]
 
 
-# ── Budget ─────────────────────────────────────────────────────
+# ── Budget ──────────────────────────────────────────────────────
 
 @router.post("/budgets", response_model=BudgetLimitOut, status_code=201)
 def create_budget(
@@ -262,8 +402,9 @@ def create_budget(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    uid = UUID(str(current_user.id))
     existing = db.query(BudgetLimit).filter(
-        BudgetLimit.user_id == current_user.id,
+        BudgetLimit.user_id == uid,
         BudgetLimit.category == payload.category,
     ).first()
     if existing:
@@ -273,7 +414,7 @@ def create_budget(
         return existing
 
     budget = BudgetLimit(
-        user_id=current_user.id,
+        user_id=uid,
         category=payload.category,
         monthly_limit=payload.monthly_limit,
     )
@@ -288,15 +429,16 @@ def get_budget_status(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    uid = UUID(str(current_user.id))
     now = datetime.utcnow()
-    budgets = db.query(BudgetLimit).filter(BudgetLimit.user_id == current_user.id).all()
+    budgets = db.query(BudgetLimit).filter(BudgetLimit.user_id == uid).all()
 
     result = []
     for b in budgets:
         spent = (
             db.query(func.sum(Transaction.amount))
             .filter(
-                Transaction.user_id == current_user.id,
+                Transaction.user_id == uid,
                 Transaction.category == b.category,
                 Transaction.transaction_type == TransactionType.DEBIT,
                 extract("year", Transaction.date) == now.year,
@@ -315,7 +457,7 @@ def get_budget_status(
     return result
 
 
-# ── HITL ───────────────────────────────────────────────────────
+# ── HITL ────────────────────────────────────────────────────────
 
 @router.get("/hitl", response_model=List[HITLItem])
 def get_hitl_queue(
@@ -323,10 +465,10 @@ def get_hitl_queue(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Return unresolved HITL items for confirmation UI."""
+    uid = UUID(str(current_user.id))
     items = (
         db.query(HITLQueue)
-        .filter(HITLQueue.user_id == current_user.id, HITLQueue.is_resolved == False)
+        .filter(HITLQueue.user_id == uid, HITLQueue.is_resolved == False)
         .limit(limit)
         .all()
     )
@@ -352,15 +494,15 @@ def confirm_hitl(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """User confirms or corrects a transaction category."""
+    uid = UUID(str(current_user.id))
     hitl = db.query(HITLQueue).filter(
         HITLQueue.transaction_id == payload.transaction_id,
-        HITLQueue.user_id == current_user.id,
+        HITLQueue.user_id == uid,
     ).first()
 
     tx = db.query(Transaction).filter(
         Transaction.id == payload.transaction_id,
-        Transaction.user_id == current_user.id,
+        Transaction.user_id == uid,
     ).first()
 
     if not tx:
@@ -376,44 +518,3 @@ def confirm_hitl(
 
     db.commit()
     return {"message": "Confirmed", "category": payload.confirmed_category}
-
-from pydantic import BaseModel as PydanticBase
-
-class ManualTransactionCreate(PydanticBase):
-    date: datetime
-    amount: float
-    description: str
-    transaction_type: str = "debit"
-    category: Optional[str] = None
-
-@router.post("/transactions/manual", response_model=TransactionOut, status_code=201)
-def add_manual_transaction(
-    payload: ManualTransactionCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    from app.ml.categorizer import layer1_rule_based
-    category = payload.category
-    layer = 4
-    if not category:
-        cat = layer1_rule_based(payload.description)
-        if cat:
-            category = cat
-            layer = 1
-        else:
-            category = "Other"
-    tx = Transaction(
-        user_id=current_user.id,
-        date=payload.date,
-        amount=payload.amount,
-        description=payload.description,
-        transaction_type=TransactionType.DEBIT if payload.transaction_type == "debit" else TransactionType.CREDIT,
-        category=category,
-        categorization_layer=layer,
-        confidence=1.0 if layer == 1 else 0.5,
-        is_confirmed=True,
-    )
-    db.add(tx)
-    db.commit()
-    db.refresh(tx)
-    return tx
