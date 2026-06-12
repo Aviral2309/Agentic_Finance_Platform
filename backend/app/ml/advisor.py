@@ -76,7 +76,7 @@ Reply with exactly one word:"""
 def expense_agent(state: AdvisorState) -> AdvisorState:
     from app.core.database import SessionLocal
     from app.models.models import Transaction, TransactionType, BudgetLimit
-    from sqlalchemy import func, extract
+    from sqlalchemy import func
     from datetime import datetime, timedelta
 
     context = "No expense data available."
@@ -86,7 +86,6 @@ def expense_agent(state: AdvisorState) -> AdvisorState:
         now = datetime.utcnow()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         last_month_start = (month_start - timedelta(days=1)).replace(day=1)
-        last_3m = now - timedelta(days=90)
 
         # This month by category
         this_month = (
@@ -122,7 +121,7 @@ def expense_agent(state: AdvisorState) -> AdvisorState:
         # Recurring
         recurring = db.query(Transaction.description, Transaction.amount).filter(
             Transaction.user_id == uid,
-            Transaction.is_recurring == True,
+            Transaction.is_recurring,
         ).distinct().limit(5).all()
 
         this_dict = {r.category or "Other": r.total for r in this_month}

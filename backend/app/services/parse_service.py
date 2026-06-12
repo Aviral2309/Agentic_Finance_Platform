@@ -8,12 +8,10 @@ Design decisions (interview-ready):
 - Writes to DB chunk by chunk — partial progress visible instantly
 - Batches LLM calls — 750 Gemini calls → 1 batch call per chunk
 """
-import os
 import re
 import logging
 from datetime import datetime
 from math import ceil
-from pathlib import Path
 from typing import Optional
 from uuid import UUID
 

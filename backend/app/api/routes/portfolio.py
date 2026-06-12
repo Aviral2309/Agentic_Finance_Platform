@@ -5,29 +5,29 @@ Fixed portfolio route:
 - Smart rebalancing suggestions
 - Performance vs Nifty 50 benchmark
 """
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 import yfinance as yf
 import numpy as np
-from datetime import datetime, timedelta
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.models import PortfolioHolding, LSTMModel, TickerSentiment, User
 from app.schemas.schemas import (
-    HoldingCreate, HoldingOut, PortfolioSummary,
-    ForecastOut, SentimentOut,
+    HoldingCreate, HoldingOut, SentimentOut,
 )
 from app.ml.technical_analysis import analyse_ticker
+
+from fastapi.responses import JSONResponse
+import math
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
 def _get_ticker_info(ticker: str) -> dict:
     import yfinance as yf
     import pandas as pd
-    import numpy as np
 
     yf_ticker = f"{ticker}.NS" if not ticker.endswith((".NS", ".BO")) else ticker
     try:
@@ -54,7 +54,7 @@ def _get_ticker_info(ticker: str) -> dict:
             "company_name": info.get("longName") or info.get("shortName"),
             "sector": info.get("sector"),
         }
-    except Exception as e:
+    except Exception:
         return {"current_price": None, "company_name": None, "sector": None}
 
 
@@ -284,7 +284,7 @@ def get_forecast(
 
     lstm_model = (
         db.query(LSTMModel)
-        .filter(LSTMModel.ticker == ticker, LSTMModel.is_production == True).first()
+        .filter(LSTMModel.ticker == ticker, LSTMModel.is_production).first()
     )
 
     # Generate insights from forecast
@@ -410,17 +410,13 @@ Give a specific, actionable 3-point analysis. Be direct. Use Indian market conte
         model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(prompt)
         return {"ticker": ticker, "analysis": response.text}
-    except Exception as e:
+    except Exception:
         try:
             model = genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content(prompt)
             return {"ticker": ticker, "analysis": response.text}
         except Exception as e2:
             raise HTTPException(status_code=500, detail=str(e2))
-
-from fastapi.responses import JSONResponse
-import math
-import json
 
 @router.get("/analysis/{ticker}")
 def get_technical_analysis(
@@ -455,14 +451,14 @@ def _train_lstm_background(ticker: str, db: Session):
     try:
         existing = (
             db2.query(LSTMModel)
-            .filter(LSTMModel.ticker == ticker, LSTMModel.is_production == True).first()
+            .filter(LSTMModel.ticker == ticker, LSTMModel.is_production).first()
         )
         existing_mae = existing.val_mae_pct if existing else None
         result = train(ticker, existing_mae)
 
         if result.get("promoted"):
             db2.query(LSTMModel).filter(
-                LSTMModel.ticker == ticker, LSTMModel.is_production == True,
+                LSTMModel.ticker == ticker, LSTMModel.is_production,
             ).update({"is_production": False})
 
             new_model = LSTMModel(

@@ -11,13 +11,11 @@ signals instantly without the noise of ML price prediction on short
 timeframes. Gemini interprets the indicators in natural language."
 """
 import logging
-from typing import Optional
+import math
 import numpy as np
-from google import genai
 
 logger = logging.getLogger(__name__)
 
-import math
 
 def _clean(val):
     """Replace nan/inf with None for JSON compliance."""
@@ -126,11 +124,7 @@ def compute_moving_averages(prices: np.ndarray) -> dict:
         else:
             result[f"ma{period}"] = None
 
-    prices_clean = prices[~np.isnan(prices)]
-    if len(prices_clean) == 0:
-        return {"error": f"No valid price data for {ticker}"}
-    current = float(prices_clean[-1])
-    prices = prices_clean
+    current = float(prices[-1]) if len(prices) > 0 else 0.0
     result["current"] = round(current, 2)
 
     # Golden/Death cross
@@ -234,20 +228,30 @@ def analyse_ticker(ticker: str) -> dict:
         bullish_signals = 0
         bearish_signals = 0
 
-        if rsi < 40: bullish_signals += 1
-        elif rsi > 65: bearish_signals += 1
+        if rsi < 40:
+            bullish_signals += 1
+        elif rsi > 65:
+            bearish_signals += 1
 
-        if macd["crossover"] in ["bullish_crossover", "bullish"]: bullish_signals += 1
-        elif macd["crossover"] in ["bearish_crossover", "bearish"]: bearish_signals += 1
+        if macd["crossover"] in ["bullish_crossover", "bullish"]:
+            bullish_signals += 1
+        elif macd["crossover"] in ["bearish_crossover", "bearish"]:
+            bearish_signals += 1
 
-        if ma["trend"] == "bullish": bullish_signals += 1
-        elif ma["trend"] == "bearish": bearish_signals += 1
+        if ma["trend"] == "bullish":
+            bullish_signals += 1
+        elif ma["trend"] == "bearish":
+            bearish_signals += 1
 
-        if bollinger["position"] == "below_lower": bullish_signals += 1
-        elif bollinger["position"] == "above_upper": bearish_signals += 1
+        if bollinger["position"] == "below_lower":
+            bullish_signals += 1
+        elif bollinger["position"] == "above_upper":
+            bearish_signals += 1
 
-        if volume["signal"] == "accumulation": bullish_signals += 1
-        elif volume["signal"] == "distribution": bearish_signals += 1
+        if volume["signal"] == "accumulation":
+            bullish_signals += 1
+        elif volume["signal"] == "distribution":
+            bearish_signals += 1
 
         if bullish_signals >= 3:
             overall_signal = "bullish"
@@ -281,7 +285,7 @@ def analyse_ticker(ticker: str) -> dict:
                 return _clean(obj)
             return obj
 
-            result = _deep_clean(result)
+        result = _deep_clean(result)
         return result
 
     except Exception as e:

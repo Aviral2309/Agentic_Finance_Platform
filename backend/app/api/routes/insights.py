@@ -8,9 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime, timedelta
-from uuid import UUID
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -459,10 +457,14 @@ def estimate_tax(
 def _compute_old_regime_tax(taxable: float) -> float:
     """Old tax regime slabs FY 2024-25."""
     tax = 0.0
-    if taxable <= 250000: return 0
-    if taxable <= 500000: tax = (taxable - 250000) * 0.05
-    elif taxable <= 1000000: tax = 12500 + (taxable - 500000) * 0.20
-    else: tax = 112500 + (taxable - 1000000) * 0.30
+    if taxable <= 250000:
+        return 0
+    if taxable <= 500000:
+        tax = (taxable - 250000) * 0.05
+    elif taxable <= 1000000:
+        tax = 12500 + (taxable - 500000) * 0.20
+    else:
+        tax = 112500 + (taxable - 1000000) * 0.30
     # Add 4% cess
     return tax * 1.04
 
@@ -473,7 +475,8 @@ def _compute_new_regime_tax(taxable: float) -> float:
     slabs = [(300000, 0), (600000, 0.05), (900000, 0.10), (1200000, 0.15), (1500000, 0.20), (float('inf'), 0.30)]
     prev = 0
     for limit, rate in slabs:
-        if taxable <= prev: break
+        if taxable <= prev:
+            break
         taxable_in_slab = min(taxable, limit) - prev
         tax += taxable_in_slab * rate
         prev = limit
@@ -481,9 +484,12 @@ def _compute_new_regime_tax(taxable: float) -> float:
 
 
 def _marginal_rate(taxable: float) -> float:
-    if taxable <= 500000: return 0.05
-    elif taxable <= 1000000: return 0.20
-    else: return 0.30
+    if taxable <= 500000:
+        return 0.05
+    elif taxable <= 1000000:
+        return 0.20
+    else:
+        return 0.30
 
 
 def _get_tax_investment_suggestions(missing: list, gross: float) -> list:

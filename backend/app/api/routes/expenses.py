@@ -1,4 +1,3 @@
-import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -20,7 +19,7 @@ from app.models.models import (
 from app.schemas.schemas import (
     BudgetLimitCreate, BudgetLimitOut, BudgetStatus,
     HITLConfirm, HITLItem, JobStatusOut,
-    MonthlyTrend, ExpenseSummary, TransactionOut, TransactionUpdate,
+    ExpenseSummary, TransactionOut, TransactionUpdate,
 )
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -240,7 +239,6 @@ def add_manual_transaction(
     db: Session = Depends(get_db),
 ):
     from app.ml.categorizer import layer1_rule_based
-    from pydantic import BaseModel
 
     description = payload.get("description", "")
     amount = float(payload.get("amount", 0))
@@ -468,7 +466,7 @@ def get_hitl_queue(
     uid = UUID(str(current_user.id))
     items = (
         db.query(HITLQueue)
-        .filter(HITLQueue.user_id == uid, HITLQueue.is_resolved == False)
+        .filter(HITLQueue.user_id == uid, ~HITLQueue.is_resolved)
         .limit(limit)
         .all()
     )

@@ -2,11 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
-import os
 from pathlib import Path
 
 from app.core.config import settings
 from app.core.database import engine, Base
+
+from app.api.routes import auth, expenses, portfolio, advisor, insights
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ app.add_middleware(
 )
 
 # Routes
-from app.api.routes import auth, expenses, portfolio, advisor, insights
+
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(expenses.router, prefix="/api")
