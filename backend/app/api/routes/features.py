@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timedelta
 from uuid import UUID
 import io
@@ -110,12 +110,10 @@ def get_news_feed(
     Fetch financial news and cross-reference with user's portfolio.
     """
     from app.core.config import settings
-    import requests
 
     uid = UUID(str(current_user.id))
     holdings = db.query(PortfolioHolding).filter(PortfolioHolding.user_id == uid).all()
     tickers = [h.ticker for h in holdings]
-    sectors = list(set(h.sector for h in holdings if h.sector))
 
     news_items = []
 
@@ -164,7 +162,7 @@ def get_news_feed(
                 "affects_portfolio": len(impacted_holdings) > 0,
             })
 
-    except Exception as e:
+    except Exception:
         return _mock_news(tickers)
 
     # Sort — portfolio impact first
