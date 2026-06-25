@@ -1,105 +1,135 @@
-# WealthPilot — Agentic Personal Finance Platform
+<div align="center">
 
-> 95% of Indians have no financial plan. Financial advisors charge ₹25,000+/year and serve only HNIs.
-> WealthPilot is the advisor for everyone else.
+# WealthPilot
 
-![WealthPilot Dashboard](https://via.placeholder.com/1200x600/080c14/c9a84c?text=WealthPilot+Dashboard)
+### Agentic Personal Finance Platform
 
-**Live Demo:** [wealthpilot.vercel.app](https://wealthpilot.vercel.app) *(deploy in progress)*
-**Backend API:** [wealthpilot.railway.app](https://wealthpilot.railway.app)
+*The same financial intelligence a ₹25,000/year advisor gives — powered by AI, built for every Indian.*
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_App-c9a84c?style=for-the-badge)](https://agentic-finance-platform.vercel.app)
+[![Backend API](https://img.shields.io/badge/Backend_API-Railway-7c3aed?style=for-the-badge)](https://agenticfinanceplatform-production-5694.up.railway.app/docs)
+[![CI](https://img.shields.io/github/actions/workflow/status/Aviral2309/Agentic_Finance_Platform/ci.yml?style=for-the-badge&label=CI)](https://github.com/Aviral2309/Agentic_Finance_Platform/actions)
+[![Python](https://img.shields.io/badge/Python-3.11-3776ab?style=for-the-badge)](https://python.org)
+[![React](https://img.shields.io/badge/React-18-61dafb?style=for-the-badge)](https://react.dev)
+
+</div>
 
 ---
 
-## What It Does
+## The Problem
 
-WealthPilot reads your actual bank statements, tracks your portfolio, and gives you the same personalized financial guidance a ₹25,000/year advisor would give — for free, in seconds.
+95% of Indians have no financial plan. Financial advisors charge ₹25,000+/year and serve only HNIs. Free tools (Walnut, Money View) either died or don't parse actual bank statements. No free tool combines statement parsing, ML categorization, portfolio tracking, and personalized AI advice in one place.
 
-| Problem | Solution |
+WealthPilot solves this.
+
+---
+
+## Live Links
+
+| Service | URL |
 |---|---|
-| Bank statements are PDFs nobody reads | 4-layer ML pipeline auto-categorizes every transaction |
-| No idea where money goes | Category breakdown with month-over-month comparison |
-| Generic financial advice | LangGraph advisor that knows YOUR actual numbers |
-| Investment decisions with no context | Technical analysis (RSI, MACD, Bollinger) + Gemini AI interpretation |
-| No financial plan | FIRE Calculator, Tax Estimator, Money Health Score |
+| Frontend | https://agentic-finance-platform.vercel.app |
+| Backend API | https://agenticfinanceplatform-production-5694.up.railway.app |
+| API Docs | https://agenticfinanceplatform-production-5694.up.railway.app/docs |
+
+---
+
+## Key Metrics
+
+| Metric | Value |
+|---|---|
+| Auto-categorization accuracy | **99.1%** on 215 transactions |
+| Technical analysis speed | **<2 seconds** vs 5-10 min LSTM |
+| LangGraph agents | **5 agents** with conditional routing |
+| Tax regimes compared | Old vs New FY 2024-25 |
+| Supported banks | SBI, HDFC, ICICI, Axis, Kotak |
 
 ---
 
 ## Features
 
-### 💳 Expense Tracker
-- Upload bank statements (PDF or CSV) — SBI, HDFC, ICICI, Axis, Kotak
-- **4-layer categorization pipeline:**
-  - Layer 1: Merchant keyword rules (~60% coverage, instant, free)
-  - Layer 2: TF-IDF + Random Forest ML classifier (~25% coverage)
-  - Layer 3: Gemini LLM batch call for ambiguous transactions (~10%)
-  - Layer 4: Human-in-the-loop confirmation UI (remaining ~5%)
-- Online learning — every HITL confirmation retrains Layer 2 monthly
-- Budget limits per category with overspend alerts
-- Recurring transaction detection
-- Month-over-month spending trends
-- Manual expense entry
+### 💳 Smart Expense Tracker
+- Upload bank statements — PDF or CSV
+- **4-layer ML categorization pipeline:**
+  - Layer 1: Merchant keyword rules — 99.1% coverage, instant, zero cost
+  - Layer 2: TF-IDF + Random Forest — handles ambiguous merchants
+  - Layer 3: Gemini LLM batch call — for genuinely unclear transactions
+  - Layer 4: Human-in-the-loop — user confirms, model retrains
+- **Spending anomaly detection** — alerts when category spikes vs 3-month average
+- Budget limits with real-time overspend alerts
+- Manual transaction entry
+- Month-by-month history navigation
+- CSV data export
+- Statement library with delete
 
-### 📈 Portfolio Manager
-- Add stock holdings — live prices via yfinance (NSE + global)
-- P&L tracking, Sharpe ratio, sector allocation
-- **Technical Analysis Engine** (replaces slow LSTM):
+### 📈 Portfolio Intelligence
+- Add NSE/BSE/global holdings — live prices via yfinance
+- Real-time P&L, Sharpe ratio, sector allocation
+- **Technical Analysis Engine** (replaces LSTM):
   - RSI (14-period) — overbought/oversold signals
-  - MACD with crossover detection
-  - Bollinger Bands with position analysis
-  - 50/200-day moving averages — golden/death cross
+  - MACD with bullish/bearish crossover detection
+  - Bollinger Bands — price position and bandwidth
+  - 50/200-day MA — golden cross / death cross
   - Volume analysis — accumulation vs distribution
 - **Gemini AI interpretation** of technical indicators in plain English
-- FinBERT NLP sentiment — hourly news analysis per ticker
+- **FinBERT NLP sentiment** — hourly news analysis per ticker
+- **Market news feed** with portfolio impact detection
 - Portfolio concentration warnings
 
 ### 🤖 AI Financial Advisor (LangGraph)
-- **5-agent graph** with conditional routing:
-  - Router Agent — classifies query intent
-  - Expense Agent — reads your actual transaction data
-  - Portfolio Agent — reads your holdings and P&L
-  - RAG Agent — retrieves from financial knowledge base
+- **5-agent conditional graph:**
+  - Router Agent — classifies query intent using Gemini
+  - Expense Agent — reads actual transaction data from PostgreSQL
+  - Portfolio Agent — fetches live holdings, prices, P&L
+  - RAG Agent — retrieves from ChromaDB knowledge base
   - Synthesizer Agent — combines context, calls Gemini 2.5 Flash
 - Streaming SSE responses (token by token)
-- Conversation history saved and recalled
 - Reads uploaded bank statement context
-- Knows your actual numbers — not generic advice
+- Conversation history saved across sessions
+- Answers with your actual ₹ numbers, not generic advice
 
 ### 📊 Financial Insights
-- **Money Health Score** — 6-dimension wellness score:
+- **Money Health Score** — 6-dimension weighted radar:
   - Emergency Fund, Investments, Debt Health
   - Spending Discipline, Diversification, Savings Rate
-- **FIRE Calculator** — Financial Independence, Retire Early:
-  - Inflation-adjusted corpus calculation (4% safe withdrawal rule)
+- **FIRE Calculator:**
+  - 4% safe withdrawal rule with inflation adjustment
   - Month-by-month SIP roadmap
   - Insurance gap analysis
-  - Asset allocation glide path
-- **Tax Estimator** — FY 2024-25:
-  - Old vs new regime comparison with your actual numbers
-  - Missing deduction detector (80C, 80D, 80CCD, HRA)
-  - Tax-saving investment suggestions ranked by risk profile
+  - Asset allocation glide path by age
+- **Tax Estimator (FY 2024-25):**
+  - Old vs new regime comparison
+  - HRA, 80C, 80D, 80CCD, Section 24 deductions
+  - Missing deduction detector with tax saving amount
+  - Investment suggestions ranked by risk profile
+
+### 🎯 Goal Tracking
+- Set financial goals (vacation, emergency fund, investment)
+- Track progress with visual progress bars
+- Target date with milestone tracking
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-| Technology | Purpose |
+| Tech | Purpose |
 |---|---|
-| React 18 + Vite | SPA framework with fast HMR |
+| React 18 + Vite | SPA with fast HMR |
 | React Router v6 | Client-side navigation |
 | Recharts | Charts — area, bar, pie, radar |
 | Zustand | Global state management |
-| Axios | HTTP client |
+| Axios | HTTP client with JWT interceptor |
 | Lucide React | Icon system |
-| CSS Variables | Design system — dark luxury theme |
+| CSS Variables | Dark luxury design system |
 
 ### Backend
-| Technology | Purpose |
+| Tech | Purpose |
 |---|---|
 | FastAPI | Async Python API framework |
-| PostgreSQL | Primary relational database |
+| PostgreSQL (Neon) | Primary database |
 | SQLAlchemy | ORM with session management |
-| Redis | Celery broker + job queue |
+| Redis | Celery broker |
 | ChromaDB | Vector database for RAG |
 | Celery | Async background workers |
 | JWT (python-jose) | Stateless authentication |
@@ -107,85 +137,50 @@ WealthPilot reads your actual bank statements, tracks your portfolio, and gives 
 | pdfplumber | Bank statement PDF parsing |
 
 ### ML / AI
-| Technology | Purpose |
+| Tech | Purpose |
 |---|---|
 | scikit-learn | TF-IDF + Random Forest categorizer |
 | FinBERT (HuggingFace) | Finance-specific NLP sentiment |
 | Gemini 2.5 Flash | GenAI — advisor + stock analysis |
 | LangGraph | Multi-agent orchestration |
-| yfinance | Live stock prices + historical OHLCV |
+| yfinance | Live stock prices + OHLCV data |
 | NewsAPI | Financial news headlines |
-| numpy / pandas / scipy | Data processing + financial math |
-| MLflow | Experiment tracking |
+| numpy / pandas | Data processing + financial math |
 
 ### DevOps
-| Technology | Purpose |
+| Tech | Purpose |
 |---|---|
-| Docker Compose | Multi-container local development |
-| GitHub Actions | CI — pytest + ruff on every push |
+| Docker Compose | Multi-container local dev |
+| GitHub Actions | CI — ruff + pytest on every push |
 | Railway | Backend deployment |
 | Vercel | Frontend deployment |
+| Neon | Managed PostgreSQL (free tier) |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   React Frontend                     │
-│         Vite · Recharts · Zustand · Axios            │
-└─────────────────┬───────────────────────────────────┘
-                  │ REST + SSE
-┌─────────────────▼───────────────────────────────────┐
-│                  FastAPI Backend                     │
-│   Auth · Expenses · Portfolio · Advisor · Insights   │
-└──────┬──────────┬──────────────┬────────────────────┘
-       │          │              │
-┌──────▼──┐ ┌────▼─────┐ ┌─────▼──────────────────┐
-│ PostgreSQL│ │ ChromaDB │ │     Celery Workers      │
-│ (primary) │ │ (vectors)│ │  Sentiment · Retrain    │
-└──────────┘ └──────────┘ └────────────┬────────────┘
-                                        │
-                           ┌────────────▼────────────┐
-                           │          Redis           │
-                           │    (broker + cache)      │
-                           └─────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     React Frontend (Vercel)                  │
+│          Dashboard · Expenses · Portfolio · Advisor          │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ REST + SSE
+┌──────────────────────▼──────────────────────────────────────┐
+│                  FastAPI Backend (Railway)                    │
+│    Auth · Expenses · Portfolio · Advisor · Insights          │
+└────────┬─────────────┬──────────────────┬───────────────────┘
+         │             │                  │
+   ┌─────▼──┐    ┌─────▼──┐        ┌─────▼──┐
+   │  Neon  │    │ChromaDB│        │  Redis  │
+   │  PgSQL │    │Vectors │        │ Broker  │
+   └────────┘    └────────┘        └────────┘
 
-ML Pipeline:
-┌─────────────────────────────────────────────────────┐
-│              4-Layer Categorizer                     │
-│  Rules(60%) → RF+TFIDF(25%) → Gemini(10%) → HITL(5%)│
-└─────────────────────────────────────────────────────┘
+4-Layer Categorizer:
+Rules (99.1%) → RF+TF-IDF → Gemini LLM → HITL (0.9%)
 
 LangGraph Agent Graph:
-┌──────────┐    ┌─────────┐   ┌───────────┐
-│  Router  │───▶│ Expense │──▶│           │
-│  Agent   │    │  Agent  │   │Synthesizer│──▶ SSE Stream
-│          │───▶│Portfolio│──▶│  Agent    │
-│          │    │  Agent  │   │           │
-│          │───▶│   RAG   │──▶│           │
-└──────────┘    └─────────┘   └───────────┘
-```
-
----
-
-## Scalable PDF Processing
-
-The system handles 1000+ page bank statements without blocking:
-
-```
-Upload → 202 Accepted + job_id
-              ↓
-        Celery Worker
-              ↓
-    Parse 50 pages at a time
-    (constant memory, fault tolerant)
-              ↓
-    4-layer categorize batch
-              ↓
-    Write to PostgreSQL chunk by chunk
-              ↓
-Client polls GET /jobs/{id} → real progress bar
+Router → [Expense | Portfolio | RAG] → Synthesizer → SSE
 ```
 
 ---
@@ -197,46 +192,48 @@ Client polls GET /jobs/{id} → real progress bar
 - Node.js 20+
 - Docker Desktop
 
-### 1. Clone and setup
+### 1. Clone
 ```bash
-git clone https://github.com/YOUR-USERNAME/wealthpilot.git
-cd wealthpilot
-cp .env.example .env
-# Fill in GEMINI_API_KEY and NEWS_API_KEY in .env
+git clone https://github.com/Aviral2309/Agentic_Finance_Platform.git
+cd Agentic_Finance_Platform
 ```
 
-### 2. Start infrastructure
+### 2. Environment variables
+```bash
+cp backend/.env.example backend/.env
+# Fill in GEMINI_API_KEY, NEWS_API_KEY, DATABASE_URL
+```
+
+### 3. Start infrastructure
 ```bash
 docker compose up -d
 # Starts PostgreSQL + Redis + ChromaDB
 ```
 
-### 3. Start backend
+### 4. Start backend
 ```bash
 cd backend
 pip install -r requirements.txt
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Start frontend
+### 5. Start frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 5. Open browser
+### 6. Open browser
 ```
 http://localhost:5173
 ```
 
 ---
 
-## API Documentation
+## API Endpoints
 
-Interactive API docs available at `http://localhost:8000/docs`
-
-### Key Endpoints
+Interactive docs: `https://agenticfinanceplatform-production-5694.up.railway.app/docs`
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -244,9 +241,12 @@ Interactive API docs available at `http://localhost:8000/docs`
 | POST | `/api/auth/login` | Get JWT token |
 | POST | `/api/expenses/upload` | Upload bank statement (async) |
 | GET | `/api/expenses/jobs/{id}` | Poll upload progress |
-| GET | `/api/expenses/summary` | Monthly category breakdown |
+| GET | `/api/expenses/summary` | Category breakdown |
 | GET | `/api/expenses/trends` | 6-month spending trends |
 | POST | `/api/expenses/transactions/manual` | Add manual transaction |
+| GET | `/api/features/export/transactions` | Download CSV |
+| GET | `/api/features/anomalies` | Spending anomaly detection |
+| GET | `/api/features/news` | News + portfolio impact |
 | POST | `/api/portfolio/holdings` | Add stock holding |
 | GET | `/api/portfolio/summary` | Portfolio with live prices |
 | GET | `/api/portfolio/analysis/{ticker}` | Technical analysis |
@@ -255,100 +255,17 @@ Interactive API docs available at `http://localhost:8000/docs`
 | GET | `/api/insights/health-score` | 6-dimension wellness score |
 | POST | `/api/insights/fire-calculator` | FIRE retirement plan |
 | POST | `/api/insights/tax-estimator` | Tax regime comparison |
+| POST | `/api/features/goals` | Create financial goal |
 
----
-
-## Interview Defensibility
-
-### Why 4 layers for categorization?
-Each layer has a different cost-accuracy profile. Rules are free and instant. ML is cheap. LLM costs money per call — only used as fallback. HITL for edge cases. Batching all ambiguous transactions in one Gemini call reduces cost by ~50x vs per-transaction calls.
-
-### Why LangGraph over LangChain agents?
-LangGraph gives explicit state schema and conditional edges. I control exactly which agents activate per query. LangChain agents are non-deterministic in routing — in a financial product, auditability of which data sources influenced a response matters.
-
-### Why technical analysis instead of LSTM?
-LSTM forecasting on price data is largely noise on short timeframes, takes 5-10 minutes to train per ticker, and gives users a false sense of precision. Technical indicators (RSI, MACD, Bollinger) are computed in under 2 seconds, always available, and give actionable signals. Gemini then interprets the indicators in plain English — more useful than a noisy prediction chart.
-
-### Why FinBERT over VADER for sentiment?
-VADER is trained on social media text. "Stock crashes record highs" reads as negative to VADER. FinBERT is fine-tuned on Wall Street Journal and Reuters financial text — it correctly identifies that sentence as bullish. Domain-specific model beats general model on domain-specific task.
-
-### How does the system handle 1000-page PDFs?
-202 Accepted + job queue. Parser runs in Celery background worker, 50 pages per chunk. Memory stays flat — GC clears each chunk after PostgreSQL write. Per-chunk retry means failure at page 847 doesn't abort the job. Client polls `/jobs/{id}` and sees a real progress bar.
-
----
-
-## Project Structure
-
-```
-wealthpilot/
-├── backend/
-│   ├── app/
-│   │   ├── api/routes/      # auth, expenses, portfolio, advisor, insights
-│   │   ├── core/            # config, database, security, celery
-│   │   ├── ml/              # categorizer, technical_analysis, sentiment, advisor
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── services/        # parse_service (async PDF/CSV)
-│   │   └── main.py
-│   ├── tests/
-│   │   └── test_basics.py   # 12 tests — categorizer + schema validation
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── pages/           # Dashboard, Expenses, Portfolio, Advisor, Insights
-│   │   ├── components/      # Layout, shared UI
-│   │   ├── services/        # api.js — all API calls
-│   │   └── store/           # Zustand global state
-│   ├── index.html
-│   └── package.json
-├── docker-compose.yml
-├── .github/workflows/ci.yml
-└── .env.example
-```
-
----
-
-## Resume Bullets
-
-```
-• Built WealthPilot — deployed agentic personal finance platform with 4-layer ML
-  expense categorizer (rules + RF + Gemini + HITL), LangGraph 5-agent advisor,
-  technical analysis engine (RSI/MACD/Bollinger + Gemini AI interpretation), and
-  FinBERT NLP sentiment pipeline
-
-• Engineered async chunked PDF pipeline handling 1000-page bank statements —
-  50-page chunks maintain flat memory, per-chunk fault tolerance, Celery job queue
-  with /jobs/{id} polling — [N] statements processed across [N] users
-
-• Designed LangGraph multi-agent system: Router → [Expense|Portfolio|RAG] →
-  Synthesizer with conditional routing — advisor answers context-aware queries
-  using user's actual transaction and portfolio data via Gemini 2.5 Flash
-
-• Built Financial Insights suite: Money Health Score (6-dimension weighted),
-  FIRE Calculator (inflation-adjusted corpus + SIP roadmap), Tax Estimator
-  (old vs new regime + missing deduction detector for FY 2024-25)
-```
-
----
-
-## Roadmap
-
-- [ ] Deploy to Railway + Vercel
-- [ ] News feed with portfolio impact analysis
-- [ ] Multi-account bank statement support
-- [ ] Historical spending comparison (previous months)
-- [ ] Spending anomaly detection with personalized alerts
-- [ ] Google OAuth
-- [ ] Stripe billing (Free/Pro tiers)
 
 ---
 
 ## Built By
 
-**Aviral Jain** — B.Tech, SGSITS Indore
-- GitHub: [@YOUR-USERNAME](https://github.com/YOUR-USERNAME)
-- LinkedIn: [linkedin.com/in/YOUR-PROFILE](https://linkedin.com/in/YOUR-PROFILE)
+**Aviral Mittal** — B.Tech Electrical Engineering, SGSITS Indore
+
+- GitHub: [@Aviral2309](https://github.com/Aviral2309)
+- Email: aviralmittal23092004@gmail.com
 
 ---
 
