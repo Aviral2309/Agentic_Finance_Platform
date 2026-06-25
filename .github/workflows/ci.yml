@@ -45,7 +45,9 @@ jobs:
 
       - name: Lint with ruff
         working-directory: backend
-        run: ruff check app/ --ignore E402
+        run: |
+          pip install ruff
+          ruff check app/ --ignore E402
 
       - name: Run tests
         working-directory: backend
