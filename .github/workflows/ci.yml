@@ -58,4 +58,6 @@ jobs:
           GEMINI_API_KEY: dummy
           NEWS_API_KEY: dummy
           APP_ENV: test
-        run: pytest tests/ -v --tb=short
+        run: |
+          pip install pytest pytest-asyncio
+          pytest tests/ -v --tb=short
