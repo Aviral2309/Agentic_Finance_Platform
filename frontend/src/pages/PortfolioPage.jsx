@@ -12,6 +12,7 @@ import {
 import { portfolioApi } from '../services/api'
 import api from '../services/api'
 import toast from 'react-hot-toast'
+import NewsFeed from '../components/NewsFeed'
 
 const COLORS = ['#c9a84c', '#3b82f6', '#22c55e', '#8b5cf6', '#f59e0b', '#06b6d4', '#ec4899']
 
@@ -226,6 +227,7 @@ function AddHoldingForm({ onAdd, onClose }) {
       </div>
     </div>
   )
+  
 }
 
 export default function PortfolioPage() {

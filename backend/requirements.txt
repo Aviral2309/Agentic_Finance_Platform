@@ -1,70 +1,55 @@
-# Web
+# Core
 fastapi==0.111.0
-uvicorn[standard]==0.29.0
+uvicorn[standard]==0.30.1
 python-multipart==0.0.9
+aiofiles==23.2.1
 
 # Database
-sqlalchemy==2.0.30
-alembic==1.13.1
-psycopg2-binary>=2.9.9
+sqlalchemy==2.0.31
+psycopg2-binary==2.9.9
+alembic==1.13.2
 
 # Auth
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+pydantic[email]==2.8.2
+pydantic-settings==2.3.4
 
-# Validation
-pydantic>=2.7.4
-pydantic-settings>=2.2.1
-email-validator==2.1.1
+# ML / AI
+scikit-learn==1.5.1
+numpy==1.26.4
+pandas==2.1.4
+scipy==1.13.1
+joblib==1.4.2
+
+# NLP
+transformers==4.41.2
+torch==2.3.1
+sentencepiece==0.2.0
+
+# Gemini + LangGraph
+google-generativeai==0.7.2
+langchain==0.2.12
+langchain-google-genai==1.0.7
+langgraph==0.1.19
+
+# PDF parsing
+pdfplumber==0.11.1
+
+# Finance data
+yfinance==0.2.40
+
+# News
+newsapi-python==0.2.7
+
+# Vector DB
+chromadb==0.5.3
 
 # Task queue
 celery==5.4.0
-redis==5.0.4
+redis==5.0.7
 
-# PDF + CSV
-pdfplumber==0.11.0
-pandas==2.1.4
-openpyxl==3.1.2
-
-# ML
-scikit-learn==1.4.2
-numpy==1.26.4
-scipy==1.13.0
-joblib==1.4.2
-
-# Deep Learning
-torch==2.3.0
-
-# NLP
-transformers==4.40.2
-sentencepiece==0.2.0
-
-# Finance data
-yfinance==0.2.38
-newsapi-python==0.2.7
-
-# GenAI + Agents — all pinned to compatible set
-google-generativeai>=0.7.0
-langchain==0.3.25
-langchain-google-genai>=2.0.0
-langgraph>=0.2.60
-langchain-core>=0.3.50
-
-# Vector DB
-chromadb==0.5.0
-
-# MLflow
-mlflow==2.13.0
-
-# Utilities
-httpx==0.27.0
-aiofiles==23.2.1
+# Utils
 python-dotenv==1.0.1
-
-# Testing
-pytest==8.2.0
-pytest-asyncio==0.23.6
-
-# Linting
-ruff==0.4.4
+httpx==0.27.0
