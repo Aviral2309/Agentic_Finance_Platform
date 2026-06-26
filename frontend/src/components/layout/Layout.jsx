@@ -10,10 +10,10 @@ import toast from 'react-hot-toast'
 
 const NAV = [
   { to: '/',          icon: LayoutDashboard, label: 'Dashboard'  },
-  { to: '/expenses',  icon: CreditCard,      label: 'Expenses'   },
-  { to: '/portfolio', icon: TrendingUp,      label: 'Portfolio'  },
-  { to: '/advisor',   icon: MessageSquare,   label: 'AI Advisor' },
-  { to: '/insights', icon: BarChart2, label: 'Insights' },
+  { to: '/dashboard/expenses',  icon: CreditCard,      label: 'Expenses'   },
+  { to: '/dashboard/portfolio', icon: TrendingUp,      label: 'Portfolio'  },
+  { to: '/dashboard/advisor',   icon: MessageSquare,   label: 'AI Advisor' },
+  { to: '/dashboard/insights', icon: BarChart2, label: 'Insights' },
 ]
 
 export default function Layout() {

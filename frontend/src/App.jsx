@@ -9,6 +9,7 @@ import ExpensesPage from './pages/ExpensesPage'
 import PortfolioPage from './pages/PortfolioPage'
 import InsightsPage from './pages/InsightsPage'
 import AdvisorPage from './pages/AdvisorPage'
+import LandingPage from './pages/LandingPage'
 
 function ProtectedRoute({ children }) {
   const token = useStore(s => s.token)
@@ -38,16 +39,18 @@ export default function App() {
         }}
       />
       <Routes>
-        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<DashboardPage />} />
-          <Route path="expenses" element={<ExpensesPage />} />
-          <Route path="portfolio" element={<PortfolioPage />} />
-          <Route path="advisor" element={<AdvisorPage />} />
-          <Route path="insights" element={<InsightsPage />} />
-        </Route>
-      </Routes>
+  <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+  <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+  <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+  <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+    <Route index element={<DashboardPage />} />
+    <Route path="expenses" element={<ExpensesPage />} />
+    <Route path="portfolio" element={<PortfolioPage />} />
+    <Route path="advisor" element={<AdvisorPage />} />
+    <Route path="insights" element={<InsightsPage />} />
+  </Route>
+  <Route path="*" element={<Navigate to="/" replace />} />
+</Routes>
     </BrowserRouter>
   )
 }
