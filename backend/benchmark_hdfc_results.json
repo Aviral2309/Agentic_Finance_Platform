@@ -1,0 +1,184 @@
+{
+  "total": 824,
+  "correct": 673,
+  "accuracy_pct": 81.67,
+  "layer_distribution": {
+    "1": 687,
+    "4": 128,
+    "2": 9
+  },
+  "per_category": {
+    "Healthcare": {
+      "correct": 25,
+      "total": 29,
+      "accuracy_pct": 86.2
+    },
+    "Transfers": {
+      "correct": 185,
+      "total": 233,
+      "accuracy_pct": 79.4
+    },
+    "Shopping": {
+      "correct": 78,
+      "total": 81,
+      "accuracy_pct": 96.3
+    },
+    "Food & Dining": {
+      "correct": 116,
+      "total": 179,
+      "accuracy_pct": 64.8
+    },
+    "Transport": {
+      "correct": 124,
+      "total": 124,
+      "accuracy_pct": 100.0
+    },
+    "Education": {
+      "correct": 20,
+      "total": 20,
+      "accuracy_pct": 100.0
+    },
+    "Bills & Utilities": {
+      "correct": 36,
+      "total": 50,
+      "accuracy_pct": 72.0
+    },
+    "Groceries": {
+      "correct": 58,
+      "total": 77,
+      "accuracy_pct": 75.3
+    },
+    "Investment": {
+      "correct": 20,
+      "total": 20,
+      "accuracy_pct": 100.0
+    },
+    "EMI & Loans": {
+      "correct": 11,
+      "total": 11,
+      "accuracy_pct": 100.0
+    }
+  },
+  "errors_sample": [
+    {
+      "narration": "UPI-RAMESH KUMAR PATIDA-SURESHSINGH71-5@O KHDFCBANK-HDFC8514",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-VIJAY SHREE TRADERS-SURENDRAGOYAL16@ OKSBI-BKID0008860-7",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-VIJAY SHREE TRADERS-SURENDRAGOYAL35@ OKSBI-BKID0008860-2",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-RAMESH KUMAR BANJARA-KAMLESHPAT76-4@O KHDFCBANK-HDFC9663",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-NETFLIX COM-NETFLIXUPI.PAYU@HDFCBANK -HDFC0MERUPI-316982",
+      "true": "Food & Dining",
+      "predicted": "Entertainment",
+      "layer": 1
+    },
+    {
+      "narration": "UPI-SURESH KUMAR PATIDA-KAMLESHPAT62-2@O KHDFCBANK-HDFC12087",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-PAYTM-BLINKIT@PTYBL-YESB0PTM UPI-322913176760-BL",
+      "true": "Groceries",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-PAYTM-BLINKIT@PTYBL-YESB0PTM UPI-133583706503-BL",
+      "true": "Groceries",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-GOOGLE-PLAYSTORE1.BD@AXISBANK-UTIB00 96593-823582635801-",
+      "true": "Bills & Utilities",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-BLINKIT.PAYU@HDFCBANK-HDFC0M ERUPI-892212955628-",
+      "true": "Food & Dining",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-PAYTM-BLINKIT@PTYBL-YESB0PTM UPI-374703965767-BL",
+      "true": "Groceries",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-RAMESH KUMAR PATIDA-RAKESHSIOTA47-4@O KHDFCBANK-HDFC6798",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-PAYTM-BLINKIT@PTYBL-YESB0PTM UPI-114790123293-BL",
+      "true": "Food & Dining",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-GOOGLE-PLAYSTORE1.BD@AXISBANK-UTIB00 33044-670347390113-",
+      "true": "Bills & Utilities",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-KAMLESH KUMAR SIOTA-SURESHSINGH62-1@O KHDFCBANK-HDFC8469",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-GOOGLE-PLAYSTORE1.BD@AXISBANK-UTIB00 87232-680952236118-",
+      "true": "Bills & Utilities",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-SURESH KUMAR SIOTA-SURESHSINGH68-5@O KHDFCBANK-HDFC18404",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-VIJAY SHREE TRADERS-SURENDRAGOYAL73@ OKSBI-BKID0008860-4",
+      "true": "Transfers",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-BLINKIT-BLINKIT.PAYU@HDFCBANK-HDFC0M ERUPI-126048667824-",
+      "true": "Food & Dining",
+      "predicted": "Other",
+      "layer": 4
+    },
+    {
+      "narration": "UPI-GOOGLE-PLAYSTORE1.BD@AXISBANK-UTIB00 17308-409406035166-",
+      "true": "Bills & Utilities",
+      "predicted": "Other",
+      "layer": 4
+    }
+  ]
+}

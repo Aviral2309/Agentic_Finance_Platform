@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.database import engine, Base
 
 from app.api.routes import auth, expenses, portfolio, advisor, insights, features
+from app.api.routes import metrics
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ app.include_router(portfolio.router, prefix="/api")
 app.include_router(advisor.router, prefix="/api")
 app.include_router(insights.router, prefix="/api")
 app.include_router(features.router, prefix="/api")
+app.include_router(metrics.router, prefix="/api")
 
 
 @app.get("/ping")

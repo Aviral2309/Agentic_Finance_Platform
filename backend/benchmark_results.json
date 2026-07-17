@@ -1,0 +1,182 @@
+{
+  "total": 579,
+  "correct": 562,
+  "accuracy_pct": 97.06,
+  "layer_distribution": {
+    "1": 579,
+    "2": 0,
+    "3": 0,
+    "4": 0
+  },
+  "per_category": {
+    "Transport": {
+      "correct": 135,
+      "total": 135,
+      "accuracy_pct": 100.0
+    },
+    "ATM Withdrawal": {
+      "correct": 18,
+      "total": 18,
+      "accuracy_pct": 100.0
+    },
+    "Groceries": {
+      "correct": 54,
+      "total": 54,
+      "accuracy_pct": 100.0
+    },
+    "Bills & Utilities": {
+      "correct": 41,
+      "total": 41,
+      "accuracy_pct": 100.0
+    },
+    "Food & Dining": {
+      "correct": 114,
+      "total": 131,
+      "accuracy_pct": 87.0
+    },
+    "Shopping": {
+      "correct": 47,
+      "total": 47,
+      "accuracy_pct": 100.0
+    },
+    "Investment": {
+      "correct": 28,
+      "total": 28,
+      "accuracy_pct": 100.0
+    },
+    "Travel": {
+      "correct": 14,
+      "total": 14,
+      "accuracy_pct": 100.0
+    },
+    "Entertainment": {
+      "correct": 51,
+      "total": 51,
+      "accuracy_pct": 100.0
+    },
+    "Transfers": {
+      "correct": 22,
+      "total": 22,
+      "accuracy_pct": 100.0
+    },
+    "Healthcare": {
+      "correct": 20,
+      "total": 20,
+      "accuracy_pct": 100.0
+    },
+    "Education": {
+      "correct": 8,
+      "total": 8,
+      "accuracy_pct": 100.0
+    },
+    "EMI & Loans": {
+      "correct": 10,
+      "total": 10,
+      "accuracy_pct": 100.0
+    }
+  },
+  "errors": [
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    },
+    {
+      "description": "UPI/BLINKIT/7654321098/QUICK GROCERY",
+      "true": "Food & Dining",
+      "predicted": "Groceries",
+      "layer": 1
+    }
+  ]
+}
